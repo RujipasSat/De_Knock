@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full w-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>KnockDe - Model Kit Knockdown House Configurator</title>
+
+  <!-- PWA Standalone Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KnockDe">
+  <meta name="theme-color" content="#0a192f">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a192f'/><path d='M20 75 L50 20 L80 75 Z' fill='none' stroke='%232563eb' stroke-width='8'/><rect x='40' y='52' width='20' height='23' fill='%2360a5fa'/></svg>">
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22KnockDe%20Model%20Kit%22%2C%22short_name%22%3A%22KnockDe%22%2C%22description%22%3A%22Knockdown%20House%20Model%20Kit%20Runner%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a192f%22%2C%22theme_color%22%3A%22%231d4ed8%22%7D">
+
+  <!-- Typography: Inter, Sarabun, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & Phosphor Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Three.js + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            kit: {
+              navy: '#0a192f',
+              navyDark: '#060f1d',
+              navyLight: '#122646',
+              cobalt: '#1d4ed8',
+              vivid: '#2563eb',
+              ice: '#eff6ff',
+              iceBorder: '#dbeafe',
+              sprueline: '#3b82f6',
+              steel: '#64748b',
+              runnerGray: '#e2e8f0',
+              gateDark: '#0f172a'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Sarabun', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            thai: ['Sarabun', 'sans-serif']
+          },
+          boxShadow: {
+            'runner': '0 0 0 1.5px #1d4ed8, 0 4px 14px rgba(37,99,235,0.18)',
+            'runner-active': '0 0 0 2px #2563eb, 0 0 20px rgba(37,99,235,0.3)',
+            'card-soft': '0 4px 20px -2px rgba(10, 25, 47, 0.08)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+    }
+    body {
+      font-family: 'Inter', 'Sarabun', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #030712;
+      color: #0a192f;
+    }
+    .safe-pt { padding-top: max(var(--sat), 12px); }
+    .safe-pb { padding-bottom: max(var(--sab), 12px); }
+    .safe-pl { padding-left: max(var(--sal), 12px); }
+    .safe-pr { padding-right: max(var(--sar), 12px); }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* iPhone 16 Pro Strict Dimensions: Portrait 402x874 / Landscape 874x402 */
+    .iphone-portrait {
+      width: 402px;
+      height: 874px;
+      max-width: 100vw;
+      max-height: 100vh;
+      border-radius: 54px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 4px #1e293b, 0 0 0 6px #0f172a;
+    }
+    .iphone-landscape {
+      width: 874px;
+      height: 402px;
+      max-width: 100vw;
+      max-height: 100vh;
+      border-radius: 46px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 4px #1e293b, 0 0 0 6px #0f172a;
+    }
+
+    /* Model Kit Blueprint Grid */
+    .bg-runner-grid {
+      background-image: 
+        linear-gradient(to right, rgba(37, 99, 235, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(37, 99, 235, 0.08) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* Sprue Gate Tabs (ก้าน Gate ยึดชิ้นส่วน 4 ด้าน สไตล์ Plastic Model Kit) */
+    .gate-card {
+      position: relative;
+    }
+    .gate-tab-t, .gate-tab-b, .gate-tab-l, .gate-tab-r {
+      position: absolute;
+      background: #0a192f;
+      z-index: 10;
+      pointer-events: none;
+      transition: background 0.2s ease;
+    }
+    .gate-tab-t {
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 5px;
+      border-radius: 2px 2px 0 0;
+    }
+    .gate-tab-b {
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 5px;
+      border-radius: 0 0 2px 2px;
+    }
+    .gate-tab-l {
+      left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 16px;
+      border-radius: 2px 0 0 2px;
+    }
+    .gate-tab-r {
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 16px;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* Cobalt Gate Variant */
+    .gate-cobalt .gate-tab-t,
+    .gate-cobalt .gate-tab-b,
+    .gate-cobalt .gate-tab-l,
+    .gate-cobalt .gate-tab-r {
+      background: #1d4ed8;
+    }
+
+    /* Custom Range Slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #1d4ed8;
+      border: 3px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.4);
+      cursor: pointer;
+      margin-top: -7px;
+      transition: transform 0.15s ease;
+    }
+    input[type=range]::-webkit-slider-thumb:active {
+      transform: scale(1.15);
+    }
+  </style>
+</head>
+
+<body class="h-full w-full overflow-hidden flex items-center justify-center bg-slate-950 p-0 md:p-3">
+
+  <!-- Desktop Backdrop Info Bar -->
+  <aside class="fixed top-4 left-6 hidden lg:flex items-center gap-3 text-slate-400 font-mono text-xs z-50">
+    <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-full border border-slate-800">
+      <span class="w-2 h-2 rounded-full bg-kit-cobalt animate-pulse"></span>
+      <span class="text-white font-bold tracking-wider">KNOCKDE MODEL KIT ARCHITECT</span>
+    </div>
+    <span class="text-slate-500">iPhone 16 Pro (402×874 Portrait / 874×402 Landscape)</span>
+  </aside>
+
+  <!-- iPhone Frame Mockup Container -->
+  <div id="phoneBezel" class="iphone-portrait relative bg-white overflow-hidden flex flex-col transition-all duration-500 ease-in-out">
+    
+    <!-- Dynamic Island Bezel -->
+    <div id="dynamicIsland" class="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-50 flex items-center justify-between px-3 pointer-events-none transition-all">
+      <div class="w-2.5 h-2.5 rounded-full bg-[#111] border border-[#222]"></div>
+      <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-kit-vivid animate-ping"></span>
+        <span class="text-[9px] font-mono text-slate-300 font-bold tracking-tight">KD-16</span>
+      </div>
+    </div>
+
+    <!-- MAIN APP SCREEN VIEWPORT -->
+    <main id="appViewport" class="w-full h-full relative overflow-hidden flex flex-col bg-white">
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 1: WELCOME & HOMEPAGE (PORTRAIT 402 x 874)]              -->
+      <!-- ================================================================= -->
+      <section id="screenWelcome" class="w-full h-full flex flex-col justify-between safe-pt safe-pb safe-pl safe-pr overflow-y-auto no-scrollbar bg-runner-grid pb-20">
+        
+        <!-- Header Profile & Model Runner Tag -->
+        <div class="space-y-1 pt-7 px-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono font-bold text-kit-cobalt tracking-widest uppercase bg-kit-ice border border-kit-iceBorder px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-kit-cobalt"></span>
+              RUNNER SPRUE #KD-01
+            </span>
+            <span class="text-[10px] font-mono text-slate-400">REV. 2026</span>
+          </div>
+          <h1 class="text-2xl font-black font-mono tracking-tight text-kit-navy">Hello.Yamiw_SoHansome</h1>
+          <p class="text-xs text-slate-500 font-medium">Welcome to KnockDe. Designyourdreamhome.</p>
+        </div>
+
+        <!-- Start design in 3 steps on Vertical Runner Rail -->
+        <div class="my-auto py-2 px-4 relative">
+          
+          <!-- Outer Sprue Runner Vertical Rails -->
+          <div class="absolute left-6 top-10 bottom-6 w-1 bg-kit-navy rounded-full pointer-events-none opacity-30"></div>
+
+          <div class="flex items-center justify-between mb-2.5">
+            <h2 class="text-xs font-mono font-bold text-kit-navy tracking-wider uppercase flex items-center gap-2">
+              <span class="px-1.5 py-0.5 bg-kit-navy text-white rounded text-[9px]">GATES</span>
+              START DESIGN IN 3 STEPS
+            </h2>
+            <span class="text-[10px] font-mono text-kit-cobalt font-bold">[KIT ASSEMBLY]</span>
+          </div>
+
+          <!-- Step 1 Card with Gate Sprues -->
+          <div class="gate-card mb-3 cursor-pointer" onclick="navigateTo('style')">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3 rounded-2xl bg-white border-2 border-kit-navy shadow-sm flex items-center gap-3 hover:border-kit-cobalt transition active:scale-[0.99]">
+              <div class="w-9 h-9 rounded-xl bg-kit-navy text-white flex items-center justify-center font-mono font-black text-sm shrink-0 border-2 border-kit-cobalt">
+                01
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-bold font-mono text-kit-navy uppercase">Choose Style</h3>
+                  <span class="text-[9px] font-mono text-kit-cobalt bg-kit-ice px-1.5 py-0.5 rounded font-bold">[BUDGET]</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 truncate">Choose your style and set your budget</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 Card with Gate Sprues -->
+          <div class="gate-card mb-3 cursor-pointer" onclick="navigateTo('studio')">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3 rounded-2xl bg-white border-2 border-kit-navy shadow-sm flex items-center gap-3 hover:border-kit-cobalt transition active:scale-[0.99]">
+              <div class="w-9 h-9 rounded-xl bg-kit-navy text-white flex items-center justify-center font-mono font-black text-sm shrink-0 border-2 border-kit-cobalt">
+                02
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-bold font-mono text-kit-navy uppercase">Design your home</h3>
+                  <span class="text-[9px] font-mono text-kit-cobalt bg-kit-ice px-1.5 py-0.5 rounded font-bold">[ASSEMBLY]</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 truncate">Layout 2D / 3D and custom parts on runner</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 Card with Gate Sprues -->
+          <div class="gate-card cursor-pointer" onclick="navigateTo('chat')">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3 rounded-2xl bg-white border-2 border-kit-navy shadow-sm flex items-center gap-3 hover:border-kit-cobalt transition active:scale-[0.99]">
+              <div class="w-9 h-9 rounded-xl bg-kit-navy text-white flex items-center justify-center font-mono font-black text-sm shrink-0 border-2 border-kit-cobalt">
+                03
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-xs font-bold font-mono text-kit-navy uppercase">Send to manufacture</h3>
+                  <span class="text-[9px] font-mono text-kit-cobalt bg-kit-ice px-1.5 py-0.5 rounded font-bold">[FACTORY]</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 truncate">Sum BOM order and dispatch to production</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Card at Bottom with Model Kit Sprue Frame -->
+        <div class="px-4 mb-2">
+          <div class="gate-card gate-cobalt">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3.5 rounded-3xl bg-kit-navy text-white border-2 border-kit-cobalt space-y-3 shadow-card-soft">
+              <div class="flex items-start gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-kit-cobalt/40 border border-kit-cobalt flex items-center justify-center text-blue-300 shrink-0">
+                  <i class="ph ph-sparkle text-sm"></i>
+                </div>
+                <p class="text-[11px] text-slate-300 leading-relaxed font-mono">
+                  "Design your dreams and bring them to life, with an AI assistant to manage your budget."
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2 pt-0.5">
+                <button id="btnNewDesign" class="flex-1 py-2.5 px-3 bg-kit-vivid hover:bg-blue-600 text-white rounded-xl text-xs font-bold font-mono tracking-wider uppercase flex items-center justify-center gap-1.5 active:scale-95 transition shadow-runner">
+                  <span>NEW DESIGN</span>
+                  <i class="ph ph-arrow-right font-bold text-sm"></i>
+                </button>
+                
+                <button id="btnTemplate" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-mono font-bold uppercase active:scale-95 transition">
+                  Template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 2: STYLE & BUDGET / REFERENCE (PORTRAIT 402 x 874)]       -->
+      <!-- ================================================================= -->
+      <section id="screenStyle" class="w-full h-full hidden flex-col safe-pt safe-pb safe-pl safe-pr overflow-y-auto no-scrollbar space-y-3 bg-slate-50 px-4 pb-20">
+        
+        <!-- Header Bar -->
+        <div class="flex items-center justify-between pt-6 shrink-0">
+          <button class="btn-back-home w-8 h-8 rounded-xl border-2 border-kit-navy bg-white text-kit-navy flex items-center justify-center hover:bg-slate-100 transition shadow-sm">
+            <i class="ph ph-caret-left font-bold text-base"></i>
+          </button>
+          <div class="text-center">
+            <h2 class="text-sm font-black font-mono tracking-wider text-kit-navy uppercase">STYLE</h2>
+            <div class="text-[9px] font-mono text-kit-cobalt font-bold">[STEP 1 OF 3 • SPRUE SELECT]</div>
+          </div>
+          <div class="w-8"></div>
+        </div>
+
+        <!-- Set Your Budget Card with Gate Tabs -->
+        <div class="gate-card shrink-0">
+          <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+          <div class="p-3.5 rounded-3xl bg-white border-2 border-kit-navy shadow-sm space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold font-mono uppercase text-kit-navy">Set Your Budget</span>
+              <div class="px-2.5 py-1 bg-kit-navy text-white text-xs font-mono font-bold rounded-lg border border-kit-cobalt tracking-wider" id="txtBudgetBadge">
+                300,000 ฿
+              </div>
+            </div>
+
+            <!-- Slider -->
+            <div class="pt-0.5">
+              <input id="rangeBudget" type="range" min="50000" max="1000000" step="10000" value="300000" class="w-full cursor-pointer">
+              <div class="flex justify-between text-[10px] font-mono text-slate-400 mt-1 font-semibold">
+                <span>50,000 ฿</span>
+                <span>1,000,000 ฿</span>
+              </div>
+            </div>
+
+            <!-- Quick Filter Chips -->
+            <div class="grid grid-cols-3 gap-2 pt-0.5">
+              <button class="budget-chip py-1.5 px-2 bg-kit-ice border border-kit-iceBorder rounded-xl text-[11px] font-mono font-bold text-kit-cobalt hover:bg-blue-100 transition active:scale-95 text-center" data-val="150000">
+                [ Compact ]
+              </button>
+              <button class="budget-chip py-1.5 px-2 bg-kit-ice border border-kit-cobalt rounded-xl text-[11px] font-mono font-bold text-kit-navy hover:bg-blue-100 transition active:scale-95 text-center" data-val="300000">
+                [ Family ]
+              </button>
+              <button class="budget-chip py-1.5 px-2 bg-kit-ice border border-kit-iceBorder rounded-xl text-[11px] font-mono font-bold text-kit-cobalt hover:bg-blue-100 transition active:scale-95 text-center" data-val="650000">
+                [ Luxury ]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Tags Row (Model Kit runner tags) -->
+        <div class="space-y-1.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-slate-400 uppercase font-bold">Filter Architectural Style</span>
+            <span class="text-[10px] font-mono text-kit-cobalt font-bold">11 Presets</span>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-kit-navy text-white shrink-0">Minimal</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-kit-vivid text-white shrink-0">Modern</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-white text-slate-700 border border-slate-200 shrink-0">Nordic</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-white text-slate-700 border border-slate-200 shrink-0">Contemporary</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-white text-slate-700 border border-slate-200 shrink-0">Tropical</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-white text-slate-700 border border-slate-200 shrink-0">Loft Style</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-kit-navy text-white shrink-0">Classic</button>
+            <button class="style-tag px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-white text-slate-700 border border-slate-200 shrink-0">Vintage</button>
+          </div>
+        </div>
+
+        <!-- House Reference Cards List with real Unsplash images -->
+        <div class="space-y-3 pb-6 flex-1">
+          
+          <!-- Card 1 -->
+          <div class="gate-card gate-cobalt house-ref-card cursor-pointer"
+               data-style="Minimal Modern Pavillion Home" data-sqm="32" data-dim="5x8 m." data-price="245000" data-builder="Fluke Living.Co.Ltd">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3 rounded-3xl border-2 border-kit-cobalt bg-white space-y-2 hover:border-kit-vivid active:scale-[0.99] transition shadow-card-soft">
+              
+              <!-- Real House Thumbnail -->
+              <div class="w-full h-32 rounded-2xl overflow-hidden relative border border-slate-200">
+                <img src="https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&w=700&q=80" 
+                     alt="Minimal Modern Pavillion Home" 
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+                <span class="absolute top-2 left-2 bg-kit-navy/90 backdrop-blur-sm text-white text-[9px] font-mono px-2 py-0.5 rounded-md border border-kit-cobalt">
+                  PART #KD-RUNNER-01
+                </span>
+                <span class="absolute top-2 right-2 bg-white/95 text-kit-cobalt text-[9px] font-mono font-bold px-2 py-0.5 rounded-md border border-kit-iceBorder">
+                  [Minimal Modern]
+                </span>
+              </div>
+
+              <div class="flex items-start justify-between pt-0.5">
+                <h3 class="text-xs font-bold font-mono text-kit-navy leading-tight">Minimal Modern Pavillion Home</h3>
+                <span class="text-xs font-bold font-mono text-kit-cobalt shrink-0">245,000 ฿</span>
+              </div>
+              
+              <!-- Dimension Blue Bar -->
+              <div class="py-1 px-3 bg-kit-navy text-white text-[10px] font-mono font-bold rounded-xl flex items-center justify-between border border-kit-navyLight">
+                <span>32 sq.m.</span>
+                <span class="text-blue-300">5.0 x 8.0 m.</span>
+                <span class="text-slate-400">Fluke Living.Co.Ltd</span>
+              </div>
+
+              <!-- Specs Box -->
+              <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-[10px] font-mono text-slate-700">
+                <div class="text-[9px] text-slate-500 truncate">
+                  Main Material: EPS, Metal Sheet, A Grade Stainless
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="gate-card house-ref-card cursor-pointer"
+               data-style="Nordic Glass Cabin Pro" data-sqm="24" data-dim="4x6 m." data-price="280000" data-builder="Siam Knockdown Co.">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3 rounded-3xl border-2 border-kit-navy bg-white space-y-2 hover:border-kit-cobalt active:scale-[0.99] transition shadow-sm">
+              
+              <!-- Real House Thumbnail -->
+              <div class="w-full h-32 rounded-2xl overflow-hidden relative border border-slate-200">
+                <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=700&q=80" 
+                     alt="Nordic Glass Cabin Pro" 
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+                <span class="absolute top-2 left-2 bg-kit-navy/90 backdrop-blur-sm text-white text-[9px] font-mono px-2 py-0.5 rounded-md border border-slate-600">
+                  PART #KD-RUNNER-02
+                </span>
+                <span class="absolute top-2 right-2 bg-white/95 text-slate-700 text-[9px] font-mono font-bold px-2 py-0.5 rounded-md border border-slate-300">
+                  [Nordic Classic]
+                </span>
+              </div>
+
+              <div class="flex items-start justify-between pt-0.5">
+                <h3 class="text-xs font-bold font-mono text-kit-navy leading-tight">Nordic Glass Cabin Pro</h3>
+                <span class="text-xs font-bold font-mono text-kit-navy shrink-0">280,000 ฿</span>
+              </div>
+              
+              <div class="py-1 px-3 bg-slate-800 text-white text-[10px] font-mono font-bold rounded-xl flex items-center justify-between">
+                <span>24 sq.m.</span>
+                <span class="text-slate-300">4.0 x 6.0 m.</span>
+                <span class="text-slate-400">Siam Knockdown Co.</span>
+              </div>
+
+              <div class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-[10px] font-mono text-slate-700">
+                <div class="text-[9px] text-slate-500 truncate">
+                  Main Material: FiberCement, Glazed Glass, PIR Core
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 3: CONTACT TECHNICIAN / LOCATION (PORTRAIT 402 x 874)]   -->
+      <!-- ================================================================= -->
+      <section id="screenLocation" class="w-full h-full hidden flex-col justify-between safe-pt safe-pb safe-pl safe-pr overflow-y-auto no-scrollbar space-y-3.5 bg-slate-50 px-4 pb-20">
+        
+        <div class="space-y-3.5 pt-6">
+          <div class="flex items-center justify-between shrink-0">
+            <button class="btn-back-style w-8 h-8 rounded-xl border-2 border-kit-navy bg-white text-kit-navy flex items-center justify-center hover:bg-slate-100 transition shadow-sm">
+              <i class="ph ph-caret-left font-bold text-base"></i>
+            </button>
+            <div class="text-center">
+              <h2 class="text-sm font-black font-mono tracking-wider text-kit-navy uppercase">CONTACT TECHNICIAN</h2>
+              <div class="text-[9px] font-mono text-kit-cobalt font-bold">[STEP 2 OF 3 • AREA CHECK]</div>
+            </div>
+            <div class="w-8"></div>
+          </div>
+
+          <div>
+            <h2 class="text-base font-bold font-mono text-kit-navy">Contact technician</h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5 leading-snug">Have you already assessed and measured the area?</p>
+          </div>
+
+          <!-- 2 Main Choice Buttons with Gate Sprues -->
+          <div class="space-y-2.5 pt-1">
+            <div class="gate-card gate-cobalt">
+              <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+              <button id="btnChoiceYes" class="w-full p-3.5 rounded-2xl bg-kit-navy text-white text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-kit-cobalt shadow-sm">
+                <span>Yes, I already have the area dimensions.</span>
+                <i class="ph ph-check-circle-fill text-lg text-kit-vivid"></i>
+              </button>
+            </div>
+
+            <div class="gate-card">
+              <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+              <button id="btnChoiceNo" class="w-full p-3.5 rounded-2xl bg-white text-slate-700 text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-slate-300">
+                <span>No, I need a technician to come and measure.</span>
+                <i class="ph ph-circle text-lg text-slate-400"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Conditional Input Form enclosed in Runner Frame -->
+          <div class="gate-card">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div id="formDimensions" class="p-3.5 rounded-3xl bg-white border-2 border-kit-navy shadow-sm space-y-2.5 transition">
+              <p class="text-xs font-mono text-slate-600 leading-snug">
+                Enter the dimensions and upload a photo of your space.
+              </p>
+
+              <div>
+                <label class="block text-[11px] font-mono font-bold text-kit-navy mb-1.5">
+                  พื้นที่บ้าน (ตารางเมตร):
+                </label>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div class="flex items-center gap-1.5 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 focus-within:border-kit-cobalt">
+                    <input id="inputDimX" type="number" value="5.0" step="0.5" class="w-full text-xs font-mono font-bold outline-none bg-transparent text-kit-navy">
+                    <span class="text-xs font-mono font-bold text-slate-400">X.</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 focus-within:border-kit-cobalt">
+                    <input id="inputDimY" type="number" value="8.0" step="0.5" class="w-full text-xs font-mono font-bold outline-none bg-transparent text-kit-navy">
+                    <span class="text-xs font-mono font-bold text-slate-400">Y.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Photo Upload Area -->
+              <div id="boxUploadPhoto" class="h-24 rounded-2xl border-2 border-dashed border-kit-cobalt bg-kit-ice/50 hover:bg-kit-ice flex flex-col items-center justify-center gap-1 cursor-pointer transition text-slate-500">
+                <i class="ph ph-camera text-2xl text-kit-cobalt"></i>
+                <span class="text-[10px] font-mono font-bold text-kit-navy">Click to upload site photo</span>
+                <span id="txtUploadedFileName" class="text-[9px] font-mono text-slate-400">JPG, PNG (Auto-converts to 3D plane)</span>
+                <input id="fileSiteInput" type="file" accept="image/*" class="hidden">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Next Button into Design Studio (Triggers Landscape Mode 874x402) -->
+        <div class="pt-2 pb-2">
+          <div class="gate-card gate-cobalt">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <button id="btnProceedToStudio" class="w-full py-3.5 px-4 bg-kit-navy text-white rounded-2xl text-xs font-bold font-mono tracking-wider uppercase flex items-center justify-center gap-2 hover:bg-kit-navyLight active:scale-[0.98] transition border-2 border-kit-cobalt shadow-runner">
+              <span>ENTER DESIGN STUDIO (LANDSCAPE)</span>
+              <i class="ph ph-arrows-clockwise font-bold text-sm text-blue-300"></i>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 4: CHAT / CONTRACTOR (PORTRAIT 402 x 874)]               -->
+      <!-- ================================================================= -->
+      <section id="screenChat" class="w-full h-full hidden flex-col safe-pt safe-pb safe-pl safe-pr overflow-y-auto no-scrollbar space-y-3 bg-slate-50 px-4 pb-20">
+        
+        <!-- Header -->
+        <div class="pt-6 space-y-1">
+          <div class="flex items-center justify-between">
+            <h1 class="text-xl font-black font-mono tracking-tight text-kit-navy uppercase">CHAT</h1>
+            <button class="w-8 h-8 rounded-xl bg-white border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-100">
+              <i class="ph ph-magnifying-glass font-bold text-base"></i>
+            </button>
+          </div>
+          <p class="text-xs font-mono text-slate-500">Message from the contractor</p>
+        </div>
+
+        <!-- Filter Chips: All (4), Quotation (4), Signing (0), Block (0) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+          <button class="px-3 py-1 bg-kit-navy text-white rounded-full text-[10px] font-mono font-bold shrink-0">All (4)</button>
+          <button class="px-3 py-1 bg-kit-vivid text-white rounded-full text-[10px] font-mono font-bold shrink-0">Quotation (4)</button>
+          <button class="px-3 py-1 bg-white text-slate-600 border border-slate-300 rounded-full text-[10px] font-mono font-bold shrink-0">Signing (0)</button>
+          <button class="px-3 py-1 bg-white text-slate-600 border border-slate-300 rounded-full text-[10px] font-mono font-bold shrink-0">Block (0)</button>
+        </div>
+
+        <!-- Chat List Cards -->
+        <div class="space-y-3 flex-1 pb-4">
+          
+          <!-- Chat Item 1: Fluke Knockdawn Home -->
+          <div class="gate-card gate-cobalt cursor-pointer" onclick="openQuotationSheet('Fluke Knockdawn Home', '250,000')">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3.5 rounded-2xl bg-kit-navy text-white border-2 border-kit-cobalt space-y-2.5 shadow-card-soft">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" 
+                     alt="Contractor Avatar" 
+                     class="w-10 h-10 rounded-xl object-cover border-2 border-kit-cobalt shrink-0">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold font-mono text-white truncate">FLUKE KNOCKDAWN HOME</h3>
+                    <span class="text-[9px] font-mono text-blue-300">1 H.</span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 truncate font-thai">
+                    โรงงานเสนอราคา ประเมิน เบื้องต้น 250,000 บาท ครับ
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1 border-t border-slate-800">
+                <span class="text-[10px] font-mono font-bold text-kit-ice bg-kit-cobalt px-2.5 py-0.5 rounded-lg">
+                  [ใบเสนอราคาใหม่ 250,000 บาท]
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                  ดูใบเสนอราคา <i class="ph ph-arrow-right"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Item 2: Siam Prefab Factory -->
+          <div class="gate-card cursor-pointer" onclick="openQuotationSheet('Siam Prefab Factory', '280,000')">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3.5 rounded-2xl bg-white text-kit-navy border-2 border-slate-300 space-y-2.5 shadow-sm">
+              <div class="flex items-center gap-3">
+                <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=150&q=80" 
+                     alt="Factory Avatar" 
+                     class="w-10 h-10 rounded-xl object-cover border-2 border-slate-300 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold font-mono text-kit-navy truncate">SIAM PREFAB FACTORY</h3>
+                    <span class="text-[9px] font-mono text-slate-400">3 H.</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 truncate font-thai">
+                    แบบ 3D และโครงสร้างกัลวาไนซ์พร้อมเข้าหน้างานครับ
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                <span class="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-lg">
+                  [ใบเสนอราคา 280,000 บาท]
+                </span>
+                <span class="text-[10px] font-mono text-slate-400 flex items-center gap-1">
+                  ดูรายละเอียด <i class="ph ph-arrow-right"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 5: PROFILE & PORTFOLIO (PORTRAIT 402 x 874)]              -->
+      <!-- ================================================================= -->
+      <section id="screenProfile" class="w-full h-full hidden flex-col safe-pt safe-pb safe-pl safe-pr overflow-y-auto no-scrollbar space-y-3.5 bg-slate-50 px-4 pb-20">
+        
+        <!-- Profile Header -->
+        <div class="pt-6 flex flex-col items-center text-center space-y-2">
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" 
+                 alt="User Avatar" 
+                 class="w-20 h-20 rounded-full object-cover border-4 border-kit-navy shadow-md">
+            <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white"></span>
+          </div>
+
+          <div>
+            <h2 class="text-base font-black font-mono text-kit-navy">Yami_SoFat</h2>
+            <p class="text-xs font-mono text-slate-400">Owner & Model Kit Architect</p>
+          </div>
+
+          <button class="px-4 py-1.5 bg-kit-navy hover:bg-slate-800 text-white rounded-xl text-[11px] font-mono font-bold tracking-wider uppercase active:scale-95 transition">
+            Edit Profile
+          </button>
+        </div>
+
+        <!-- MY Portfolio Section -->
+        <div class="space-y-2.5 pt-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black font-mono text-kit-navy uppercase tracking-wider">MY Portfolio</h3>
+            <span class="text-[10px] font-mono text-kit-cobalt font-bold">1 PROJECT COMPLETED</span>
+          </div>
+
+          <!-- Completed Portfolio Card -->
+          <div class="gate-card gate-cobalt">
+            <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+            <div class="p-3.5 rounded-3xl bg-white border-2 border-kit-cobalt space-y-2.5 shadow-card-soft">
+              
+              <div class="w-full h-40 rounded-2xl overflow-hidden relative border border-slate-200">
+                <img src="https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=700&q=80" 
+                     alt="Yami_HomeFiveN Finished Project" 
+                     class="w-full h-full object-cover"
+                     loading="lazy">
+                
+                <span class="absolute top-2 left-2 bg-emerald-600 text-white text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                  complete
+                </span>
+
+                <span class="absolute top-2 right-2 bg-kit-navy/90 text-white text-[9px] font-mono px-2 py-0.5 rounded-md border border-kit-cobalt">
+                  1 Y.
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-xs font-bold font-mono text-kit-navy">Yami_HomeFiveN</h4>
+                  <p class="text-[10px] font-mono text-slate-400">Fluke Living.Co.Ltd • 32 sq.m.</p>
+                </div>
+                <span class="text-xs font-bold font-mono text-kit-cobalt">245,000 ฿</span>
+              </div>
+
+              <div class="p-2 rounded-xl bg-slate-50 text-[10px] font-mono text-slate-600 border border-slate-200 flex justify-between items-center">
+                <span>Warranty Status: Active (10 Yrs)</span>
+                <span class="text-kit-vivid font-bold">View Specs &rarr;</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- [SCREEN 6: DESIGN STUDIO (LANDSCAPE 874 x 402) - 60/40 BALANCED]  -->
+      <!-- ================================================================= -->
+      <section id="screenStudio" class="w-full h-full hidden flex-col bg-white overflow-hidden relative">
+        
+        <!-- Studio Top Bar (Navy + Cobalt Theme) -->
+        <header class="w-full bg-kit-navy border-b-2 border-kit-navyLight px-4 py-1.5 flex items-center justify-between shrink-0 z-30 text-white">
+          
+          <!-- Left: Exit Studio & Part Indicator -->
+          <div class="flex items-center gap-2.5">
+            <button id="btnExitStudio" class="w-7 h-7 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center hover:bg-slate-700 transition" title="Return to Portrait">
+              <i class="ph ph-caret-left font-bold text-base text-blue-300"></i>
+            </button>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="px-1.5 py-0.5 rounded bg-kit-cobalt text-[9px] font-mono font-bold tracking-wider">GATE A1</span>
+                <span id="txtStudioPartTitle" class="text-xs font-bold font-mono text-white truncate max-w-[150px] sm:max-w-none">Room wall 2.00*3.00 m</span>
+              </div>
+              <div class="text-[8px] font-mono text-slate-400">Model Kit Sprue Scale 1:50</div>
+            </div>
+          </div>
+
+          <!-- Center: Segmented Switch [ 2D Plan | 3D View ] -->
+          <div class="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-700">
+            <button id="btnTab2D" class="px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-kit-vivid text-white transition shadow-sm">
+              2D Plan
+            </button>
+            <button id="btnTab3D" class="px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-300 hover:text-white transition">
+              3D View
+            </button>
+          </div>
+
+          <!-- Right: Runner View Mode & Place Order -->
+          <div class="flex items-center gap-2">
+            <button id="btnToggleSprueMode" class="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-mono font-bold bg-kit-ice text-kit-navy border border-kit-iceBorder hover:bg-white transition">
+              <i class="ph ph-grid-four text-kit-cobalt font-bold"></i>
+              <span id="txtSprueModeLabel">Sprue Tray</span>
+            </button>
+
+            <button id="btnPlaceOrder" class="px-3 py-1 bg-kit-vivid hover:bg-blue-600 text-white text-xs font-mono font-bold rounded-xl active:scale-95 transition shadow-runner">
+              Place Order
+            </button>
+          </div>
+        </header>
+
+        <!-- Studio Workspace: Canvas Area (Left ~60-62%) + Model Kit Runner Panel (Right ~38-40%) -->
+        <div class="flex-1 w-full h-full flex overflow-hidden relative">
+          
+          <!-- Left Canvas Area (Wider 60-62% proportion) -->
+          <div class="w-[60%] md:w-[62%] h-full relative overflow-hidden flex flex-col bg-slate-100 border-r-2 border-kit-navy">
+            
+            <!-- [SUBVIEW 1: 2D PLAN CANVAS] -->
+            <div id="studio2DContainer" class="w-full h-full relative flex items-center justify-center p-2 bg-runner-grid">
+              <canvas id="canvas2D" class="bg-white rounded-2xl border-2 border-kit-navy shadow-sm touch-none block"></canvas>
+              
+              <!-- 2D Interactive Model Kit Blueprint Badge -->
+              <div class="absolute top-2.5 left-2.5 bg-kit-navy/95 backdrop-blur-sm text-white border border-kit-cobalt px-2.5 py-0.5 rounded-lg text-[9px] font-mono flex items-center gap-1.5 shadow-sm pointer-events-none">
+                <span class="w-1.5 h-1.5 rounded-full bg-kit-vivid animate-pulse"></span>
+                <span>[ 2D RUNNER BLUEPRINT • 5.00 × 8.00 M ]</span>
+              </div>
+            </div>
+
+            <!-- [SUBVIEW 2: 3D VIEWPORT WITH THREE.JS] -->
+            <div id="studio3DContainer" class="w-full h-full relative hidden">
+              <canvas id="canvasThree" class="w-full h-full block touch-none cursor-grab active:cursor-grabbing"></canvas>
+              
+              <!-- 3D Dimension Status Overlay -->
+              <div class="absolute bottom-10 left-3 pointer-events-none flex items-center gap-1.5 text-[9px] font-mono text-kit-navy bg-white/90 backdrop-blur-sm border border-slate-300 px-2.5 py-0.5 rounded-xl shadow-sm">
+                <span>PLANE: <strong class="text-kit-cobalt">5.00 × 8.00 M</strong></span>
+                <span>•</span>
+                <span id="txtModelViewModeStatus">MODE: <strong>ASSEMBLED</strong></span>
+              </div>
+
+              <!-- Perspective Preset Toggle -->
+              <button id="btnToggle3DViewMode" class="absolute top-2.5 left-2.5 bg-white border border-slate-300 px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold text-kit-navy flex items-center gap-1 shadow-sm hover:bg-slate-50 transition">
+                <i class="ph ph-cube text-kit-cobalt"></i>
+                <span id="txtCamModeLabel">Exterior Isometric</span>
+              </button>
+            </div>
+
+            <!-- Bottom Budget Bar inside Studio -->
+            <footer class="w-full bg-white border-t border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0 z-20">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-mono font-bold text-slate-500">Budget:</span>
+                <div class="w-28 sm:w-48 h-2 bg-slate-200 rounded-full overflow-hidden border border-slate-300">
+                  <div id="studioBudgetProgress" class="h-full bg-kit-vivid transition-all duration-300" style="width: 58%;"></div>
+                </div>
+              </div>
+
+              <div class="flex items-baseline gap-1 font-mono">
+                <span id="txtCurrentCost" class="text-xs font-bold text-kit-navy">174,800</span>
+                <span class="text-[10px] text-slate-400">/</span>
+                <span id="txtMaxBudget" class="text-[10px] text-slate-400">300,000 ฿</span>
+              </div>
+            </footer>
+          </div>
+
+          <!-- Right Side Inspection & Material / Built-in Panel (Balanced 38-40% Width) -->
+          <aside id="sideInspectPanel" class="w-[40%] md:w-[38%] h-full bg-kit-ice flex flex-col justify-between p-2 overflow-y-auto no-scrollbar shrink-0">
+            
+            <div class="space-y-2">
+              
+              <!-- Tab Switcher: [ Materials | Built-in ] -->
+              <div class="grid grid-cols-2 gap-1 bg-white p-0.5 rounded-xl border-2 border-kit-navy">
+                <button id="tabMatToggle" class="py-1 rounded-lg text-xs font-mono font-bold bg-kit-navy text-white transition">
+                  Materials
+                </button>
+                <button id="tabBuiltinToggle" class="py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-600 hover:text-kit-navy transition">
+                  Built-in
+                </button>
+              </div>
+
+              <!-- ============================================== -->
+              <!-- [TAB VIEW A: MATERIALS INSPECTION MODE]       -->
+              <!-- ============================================== -->
+              <div id="panelMaterialsMode" class="space-y-2">
+                
+                <!-- Part Gate Box with 4 Sprues -->
+                <div class="gate-card gate-cobalt">
+                  <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                  <div class="p-2.5 bg-white rounded-2xl border-2 border-kit-cobalt shadow-sm space-y-0.5">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[8px] font-mono font-bold text-kit-cobalt uppercase">RUNNER PART [A1]</span>
+                      <span class="text-[8px] font-mono bg-blue-100 text-kit-cobalt px-1 py-0.2 rounded font-bold">Core Spec</span>
+                    </div>
+                    <h4 id="txtInspectPartName" class="text-xs font-bold font-mono text-kit-navy">Room Wall</h4>
+                    <p id="txtInspectPartSize" class="text-[9px] font-mono text-slate-500">Size 2.00*3.00 m • Thickness 75mm</p>
+                  </div>
+                </div>
+
+                <!-- Texture Chips with Gate Styling -->
+                <div class="space-y-1">
+                  <span class="text-[9px] font-mono font-bold text-kit-navy uppercase">Texture Material</span>
+                  <div class="grid grid-cols-3 gap-1" id="containerTextureChips">
+                    <button class="tex-chip px-1 py-1 rounded-xl text-[9px] font-mono font-bold bg-kit-navy text-white border-2 border-kit-navy transition text-center" data-tex="FiberCement">
+                      FiberCement
+                    </button>
+                    <button class="tex-chip px-1 py-1 rounded-xl text-[9px] font-mono font-bold bg-white text-slate-700 border-2 border-slate-300 hover:border-kit-cobalt transition text-center" data-tex="Leather">
+                      Leather
+                    </button>
+                    <button class="tex-chip px-1 py-1 rounded-xl text-[9px] font-mono font-bold bg-white text-slate-700 border-2 border-slate-300 hover:border-kit-cobalt transition text-center" data-tex="Boucle">
+                      Boucle
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Bullet Feature -->
+                <div class="flex items-center gap-1.5 text-[9px] font-mono font-bold text-kit-navy bg-white p-1.5 rounded-xl border border-slate-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span id="txtMatBullet">100% waterproof coating</span>
+                </div>
+
+                <!-- Tone Swatches -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[9px] font-mono font-bold text-kit-navy uppercase">Tone Swatch</span>
+                    <span id="txtToneHex" class="text-[9px] font-mono font-bold text-kit-cobalt">#1d4ed8</span>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-1 bg-white p-1 rounded-xl border border-slate-200">
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#0a192f] border-2 border-white ring-1 ring-slate-300 active:scale-90 transition" data-hex="#0a192f" data-val="0x0a192f" title="Deep Navy"></button>
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#1d4ed8] border-2 border-white ring-2 ring-kit-vivid active:scale-90 transition" data-hex="#1d4ed8" data-val="0x1d4ed8" title="Cobalt Blue"></button>
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#3b82f6] border-2 border-white ring-1 ring-slate-300 active:scale-90 transition" data-hex="#3b82f6" data-val="0x3b82f6" title="Vivid Sky"></button>
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#64748b] border-2 border-white ring-1 ring-slate-300 active:scale-90 transition" data-hex="#64748b" data-val="0x64748b" title="Steel Slate"></button>
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#dbeafe] border-2 border-white ring-1 ring-slate-300 active:scale-90 transition" data-hex="#dbeafe" data-val="0xdbeafe" title="Ice Blue"></button>
+                    <button class="tone-btn w-5 h-5 rounded-full bg-[#ffffff] border-2 border-slate-300 ring-1 ring-slate-200 active:scale-90 transition" data-hex="#ffffff" data-val="0xffffff" title="Pure White"></button>
+                  </div>
+                </div>
+
+                <!-- Total Cost Box with Runner Frame -->
+                <div class="gate-card">
+                  <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                  <div class="p-2 bg-white rounded-xl border-2 border-kit-navy flex items-center justify-between shadow-sm">
+                    <div>
+                      <span class="text-[8px] font-mono text-slate-400 uppercase">Total Cost:</span>
+                      <div id="txtPartCost" class="text-xs font-bold font-mono text-kit-navy">42,000 ฿</div>
+                    </div>
+                    <span class="text-[8px] font-mono text-kit-cobalt font-bold bg-kit-ice px-1 py-0.5 rounded">Part [A1]</span>
+                  </div>
+                </div>
+
+                <!-- AI Advice Box -->
+                <div class="p-1.5 rounded-xl bg-white border border-slate-200 text-[9px] font-mono text-slate-700 leading-snug">
+                  <span class="font-bold text-kit-navy block mb-0.5 flex items-center gap-1">
+                    <i class="ph ph-sparkle text-kit-cobalt"></i>
+                    AI Advice :
+                  </span>
+                  <span id="txtAiAdviceContent">FiberCement can be easy to deteriorate if unsealed, but coated with our weather-shield it delivers 20-year durability.</span>
+                </div>
+
+              </div>
+
+              <!-- ============================================== -->
+              <!-- [TAB VIEW B: ALL BUILT-IN CATALOG MODE]       -->
+              <!-- ============================================== -->
+              <div id="panelBuiltinMode" class="space-y-2 hidden">
+                
+                <!-- Catalog Header -->
+                <div class="p-1.5 bg-kit-navy text-white rounded-xl border border-kit-cobalt flex items-center justify-between">
+                  <span class="text-[9px] font-mono font-bold tracking-wider uppercase">ALL BUILT-IN CATALOG</span>
+                  <span class="text-[8px] font-mono text-blue-300">SPRUE B1-D4</span>
+                </div>
+
+                <!-- Subcategory Filter Pills -->
+                <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+                  <button class="builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-kit-cobalt text-white shrink-0" data-cat="all">All</button>
+                  <button class="builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-white text-slate-700 border border-slate-300 shrink-0" data-cat="window">Window</button>
+                  <button class="builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-white text-slate-700 border border-slate-300 shrink-0" data-cat="door">Door</button>
+                  <button class="builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-white text-slate-700 border border-slate-300 shrink-0" data-cat="curtain">Curtain</button>
+                  <button class="builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-white text-slate-700 border border-slate-300 shrink-0" data-cat="counter">Counter</button>
+                </div>
+
+                <!-- 2-Column Built-in Runner Parts Grid with Real Unsplash Thumbnails -->
+                <div class="grid grid-cols-2 gap-2 max-h-[190px] overflow-y-auto no-scrollbar pr-0.5" id="containerBuiltinParts">
+                  
+                  <!-- Part 1: Modern Window -->
+                  <div class="gate-card gate-cobalt builtin-part-card cursor-pointer" data-id="B1" data-title="Modern Window" data-price="12500" data-cat="window">
+                    <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                    <div class="p-1.5 rounded-xl bg-white border-2 border-kit-navy hover:border-kit-cobalt transition space-y-1 shadow-sm">
+                      <img src="https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=250&q=80" 
+                           alt="Modern Window" class="w-full h-12 object-cover rounded-lg">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[8px] font-mono font-bold text-kit-cobalt bg-kit-ice px-1 rounded">[B1]</span>
+                        <span class="text-[8px] font-mono text-slate-400">1.8×2.0m</span>
+                      </div>
+                      <div class="text-[9px] font-mono font-bold text-kit-navy truncate">Modern Window</div>
+                      <div class="text-[9px] font-mono font-bold text-kit-cobalt">12,500 ฿</div>
+                    </div>
+                  </div>
+
+                  <!-- Part 2: Glass Sliding Door -->
+                  <div class="gate-card builtin-part-card cursor-pointer" data-id="B2" data-title="Glass Sliding Door" data-price="18000" data-cat="door">
+                    <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                    <div class="p-1.5 rounded-xl bg-white border-2 border-kit-navy hover:border-kit-cobalt transition space-y-1 shadow-sm">
+                      <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=250&q=80" 
+                           alt="Glass Door" class="w-full h-12 object-cover rounded-lg">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[8px] font-mono font-bold text-kit-cobalt bg-kit-ice px-1 rounded">[B2]</span>
+                        <span class="text-[8px] font-mono text-slate-400">2.0×2.2m</span>
+                      </div>
+                      <div class="text-[9px] font-mono font-bold text-kit-navy truncate">Glass Door</div>
+                      <div class="text-[9px] font-mono font-bold text-kit-cobalt">18,000 ฿</div>
+                    </div>
+                  </div>
+
+                  <!-- Part 3: Minimal Curtain -->
+                  <div class="gate-card builtin-part-card cursor-pointer" data-id="C1" data-title="Built-in Curtain" data-price="6500" data-cat="curtain">
+                    <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                    <div class="p-1.5 rounded-xl bg-white border-2 border-kit-navy hover:border-kit-cobalt transition space-y-1 shadow-sm">
+                      <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=250&q=80" 
+                           alt="Curtain" class="w-full h-12 object-cover rounded-lg">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[8px] font-mono font-bold text-kit-cobalt bg-kit-ice px-1 rounded">[C1]</span>
+                        <span class="text-[8px] font-mono text-slate-400">2.0×2.5m</span>
+                      </div>
+                      <div class="text-[9px] font-mono font-bold text-kit-navy truncate">Curtain Set</div>
+                      <div class="text-[9px] font-mono font-bold text-kit-cobalt">6,500 ฿</div>
+                    </div>
+                  </div>
+
+                  <!-- Part 4: Kitchen Counter -->
+                  <div class="gate-card builtin-part-card cursor-pointer" data-id="D1" data-title="Kitchen Counter" data-price="24000" data-cat="counter">
+                    <span class="gate-tab-t"></span><span class="gate-tab-b"></span><span class="gate-tab-l"></span><span class="gate-tab-r"></span>
+                    <div class="p-1.5 rounded-xl bg-white border-2 border-kit-navy hover:border-kit-cobalt transition space-y-1 shadow-sm">
+                      <img src="https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=250&q=80" 
+                           alt="Kitchen Counter" class="w-full h-12 object-cover rounded-lg">
+                      <div class="flex items-center justify-between">
+                        <span class="text-[8px] font-mono font-bold text-kit-cobalt bg-kit-ice px-1 rounded">[D1]</span>
+                        <span class="text-[8px] font-mono text-slate-400">0.8×2.4m</span>
+                      </div>
+                      <div class="text-[9px] font-mono font-bold text-kit-navy truncate">Kitchen Island</div>
+                      <div class="text-[9px] font-mono font-bold text-kit-cobalt">24,000 ฿</div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="text-[8px] font-mono text-kit-cobalt text-center font-bold">
+                  Tap any part to snap onto runner sprue layout
+                </div>
+              </div>
+
+            </div>
+
+          </aside>
+        </div>
+
+      </section>
+
+      <!-- ================================================================= -->
+      <!-- PERSISTENT BOTTOM NAVIGATION BAR (PORTRAIT ONLY - 5 MENUS)        -->
+      <!-- ================================================================= -->
+      <nav id="persistentBottomNav" class="absolute bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t-2 border-slate-200 px-3 py-1.5 flex items-center justify-around z-40 transition-transform">
+        
+        <!-- 1. Home -->
+        <button class="nav-item flex flex-col items-center gap-0.5 text-kit-cobalt" data-target="welcome">
+          <i class="ph ph-house text-lg font-bold"></i>
+          <span class="text-[9px] font-mono font-bold">Home</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-kit-cobalt nav-dot"></span>
+        </button>
+
+        <!-- 2. Style -->
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-kit-navy" data-target="style">
+          <i class="ph ph-paint-brush text-lg"></i>
+          <span class="text-[9px] font-mono font-bold">Style</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-transparent nav-dot"></span>
+        </button>
+
+        <!-- 3. Design (Triggers Studio Landscape) -->
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-kit-navy" data-target="studio">
+          <div class="w-8 h-8 rounded-xl bg-kit-navy text-white flex items-center justify-center -mt-2 shadow-runner border border-kit-cobalt">
+            <i class="ph ph-cube text-base font-bold text-kit-ice"></i>
+          </div>
+          <span class="text-[9px] font-mono font-bold">Design</span>
+        </button>
+
+        <!-- 4. Chat -->
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-kit-navy" data-target="chat">
+          <i class="ph ph-chat-circle-dots text-lg"></i>
+          <span class="text-[9px] font-mono font-bold">Chat</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-transparent nav-dot"></span>
+        </button>
+
+        <!-- 5. Profile -->
+        <button class="nav-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-kit-navy" data-target="profile">
+          <i class="ph ph-user text-lg"></i>
+          <span class="text-[9px] font-mono font-bold">Profile</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-transparent nav-dot"></span>
+        </button>
+
+      </nav>
+
+    </main>
+
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- MODAL: ORDER CONFIRMATION & BILL OF MATERIALS (BOM)               -->
+  <!-- ================================================================= -->
+  <div id="modalOrderSummary" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white rounded-3xl border-2 border-kit-navy p-4 space-y-3.5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+        <div>
+          <span class="text-[9px] font-mono font-bold text-kit-cobalt uppercase">DISPATCH ORDER</span>
+          <h3 class="text-xs font-bold font-mono uppercase tracking-wider text-kit-navy">Bill of Materials</h3>
+        </div>
+        <button id="btnCloseOrderModal" class="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center hover:bg-slate-100">
+          <i class="ph ph-x text-sm text-slate-600"></i>
+        </button>
+      </div>
+
+      <div class="p-3 rounded-2xl bg-kit-ice border border-kit-iceBorder space-y-1.5 text-xs font-mono">
+        <div class="flex justify-between">
+          <span class="text-slate-500">Model Kit:</span>
+          <span class="font-bold text-kit-navy" id="summaryModelName">Minimal Modern Pavillion</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Dimensions:</span>
+          <span class="font-bold text-kit-navy">5.0 x 8.0 m (32 sq.m.)</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Core Texture:</span>
+          <span class="font-bold text-kit-navy" id="summaryTexture">FiberCement</span>
+        </div>
+        <div class="flex justify-between border-t border-kit-iceBorder pt-1.5 text-xs font-bold">
+          <span class="text-kit-navy">Total Quotation:</span>
+          <span id="summaryTotalQuotation" class="text-kit-cobalt">174,800 ฿</span>
+        </div>
+      </div>
+
+      <div class="text-[9px] font-mono text-slate-400 text-center">
+        Order dispatched to Fluke Living.Co.Ltd CAD engineer team for automated sprue machining.
+      </div>
+
+      <button id="btnConfirmSendFactory" class="w-full py-2.5 bg-kit-vivid hover:bg-blue-600 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition active:scale-95 shadow-runner">
+        Confirm & Send to Manufacture
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: CONTRACTOR QUOTATION SHEET -->
+  <div id="modalQuotationSheet" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white rounded-3xl border-2 border-kit-navy p-4 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+        <div>
+          <span class="text-[9px] font-mono font-bold text-kit-cobalt uppercase">OFFICIAL QUOTATION</span>
+          <h3 id="txtQuotationFactoryName" class="text-xs font-bold font-mono text-kit-navy">FLUKE KNOCKDAWN HOME</h3>
+        </div>
+        <button id="btnCloseQuotationModal" class="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center hover:bg-slate-100">
+          <i class="ph ph-x text-sm text-slate-600"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2 text-xs font-mono">
+        <div class="flex justify-between text-slate-600">
+          <span>Structural Galvanized Steel:</span>
+          <span class="font-bold text-kit-navy">95,000 ฿</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>PIR Panel & Wall Cladding:</span>
+          <span class="font-bold text-kit-navy">85,000 ฿</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Glass Doors & Windows:</span>
+          <span class="font-bold text-kit-navy">45,000 ฿</span>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span>Delivery & On-site Assembly:</span>
+          <span class="font-bold text-kit-navy">25,000 ฿</span>
+        </div>
+        <div class="border-t border-slate-200 pt-1.5 flex justify-between font-bold text-sm">
+          <span class="text-kit-navy">Grand Total:</span>
+          <span id="txtQuotationTotalAmount" class="text-kit-cobalt">250,000 ฿</span>
+        </div>
+      </div>
+
+      <button id="btnSignContract" class="w-full py-2.5 bg-kit-navy hover:bg-slate-800 text-white rounded-xl text-xs font-mono font-bold uppercase transition active:scale-95 border-2 border-kit-cobalt">
+        Sign Contract & Pay Deposit
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* PWA Service Worker Registration */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swBlob = `
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => self.clients.claim());
+          self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+        `;
+        navigator.serviceWorker.register(URL.createObjectURL(new Blob([swBlob], { type: 'application/javascript' }))).catch(() => {});
+      });
+    }
+
+    // App State Management
+    const AppState = {
+      currentScreen: 'welcome',
+      isLandscapeStudio: false,
+      budget: 300000,
+      activeStyle: 'Minimal Modern Pavillion Home',
+      builder: 'Fluke Living.Co.Ltd',
+      dimensions: { x: 5.0, y: 8.0 },
+      hasAreaDimensions: true,
+      studioTab: '2D',
+      sprueMode: 'assembled',
+      selectedPart: {
+        id: 'A1',
+        name: 'Room Wall',
+        size: '2.00*3.00 m',
+        texture: 'FiberCement',
+        toneHex: '#1d4ed8',
+        toneVal: 0x1d4ed8,
+        cost: 42000
+      },
+      accumulatedCost: 174800
+    };
+
+    const AI_ADVICE_CATALOG = {
+      'FiberCement': {
+        bullet: '100% waterproof coating',
+        advice: 'FiberCement can be easy to deteriorate if unsealed, but coated with our weather-shield it delivers 20-year durability.'
+      },
+      'Leather': {
+        bullet: 'Acoustic absorption & luxury tactile',
+        advice: 'Faux leather wall panelling dramatically dampens interior reverberation, perfect for office and bedroom cabins.'
+      },
+      'Boucle': {
+        bullet: 'Nordic cozy textured weave',
+        advice: 'Textured boucle fabric panels create a Scandinavian hospitality vibe with natural insulation properties.'
+      }
+    };
+  </script>
+
+  <script>
+    let scene3D, camera3D, renderer3D, controls3D;
+    let houseGroup3D, sprueRunnerGroup3D;
+    let wallMesh3D, roofMesh3D, windowMesh3D;
+    let cameraViewPreset = 'exterior';
+
+    function initThreeJS() {
+      const container = document.getElementById('studio3DContainer');
+      const canvas = document.getElementById('canvasThree');
+      if (!container || !canvas) return;
+
+      const w = container.clientWidth || 520;
+      const h = container.clientHeight || 320;
+
+      scene3D = new THREE.Scene();
+      scene3D.background = new THREE.Color(0xf0f7ff);
+
+      const aspect = w / h;
+      const d = 5.6;
+      camera3D = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 100);
+      camera3D.position.set(10, 8.5, 10);
+      camera3D.lookAt(0, 1.2, 0);
+
+      renderer3D = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer3D.setSize(w, h);
+      renderer3D.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer3D.shadowMap.enabled = true;
+      renderer3D.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      controls3D = new THREE.OrbitControls(camera3D, renderer3D.domElement);
+      controls3D.enableDamping = true;
+      controls3D.dampingFactor = 0.08;
+      controls3D.target.set(0, 1.0, 0);
+
+      // Lights
+      const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+      scene3D.add(ambient);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      dirLight.position.set(12, 16, 8);
+      dirLight.castShadow = true;
+      scene3D.add(dirLight);
+
+      buildAssembledHouse();
+      buildSprueRunnerModel();
+
+      window.addEventListener('resize', onResizeThree);
+      animateThree();
+    }
+
+    /* 1. Assembled House Model */
+    function buildAssembledHouse() {
+      houseGroup3D = new THREE.Group();
+
+      // Concrete Foundation
+      const slabGeo = new THREE.BoxGeometry(6.4, 0.25, 4.4);
+      const slabMat = new THREE.MeshStandardMaterial({ color: 0x0a192f, roughness: 0.8 });
+      const slab = new THREE.Mesh(slabGeo, slabMat);
+      slab.position.set(0, 0.12, 0);
+      houseGroup3D.add(slab);
+
+      // Floor Grid Lines
+      const grid = new THREE.GridHelper(8, 8, 0x1d4ed8, 0x93c5fd);
+      grid.position.y = 0.26;
+      houseGroup3D.add(grid);
+
+      // Main PIR Wall (customizable by color swatch)
+      const wallGeo = new THREE.BoxGeometry(6.0, 2.5, 0.16);
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: AppState.selectedPart.toneVal,
+        roughness: 0.5,
+        metalness: 0.15
+      });
+      wallMesh3D = new THREE.Mesh(wallGeo, wallMat);
+      wallMesh3D.position.set(0, 1.45, -1.9);
+      wallMesh3D.castShadow = true;
+      houseGroup3D.add(wallMesh3D);
+
+      // Side Wall
+      const sideWallGeo = new THREE.BoxGeometry(0.16, 2.5, 3.8);
+      const sideWall = new THREE.Mesh(sideWallGeo, wallMat);
+      sideWall.position.set(-2.9, 1.45, 0);
+      houseGroup3D.add(sideWall);
+
+      // Glazed Front Sliding Window (Sprue A2)
+      const winGeo = new THREE.BoxGeometry(3.6, 2.1, 0.08);
+      const winMat = new THREE.MeshPhysicalMaterial({
+        color: 0x93c5fd,
+        transparent: true,
+        opacity: 0.45,
+        roughness: 0.1,
+        transmission: 0.85
+      });
+      windowMesh3D = new THREE.Mesh(winGeo, winMat);
+      windowMesh3D.position.set(0.6, 1.35, 1.9);
+      houseGroup3D.add(windowMesh3D);
+
+      // Built-in Bed inside
+      const bedGeo = new THREE.BoxGeometry(2.2, 0.45, 1.8);
+      const bedMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 });
+      const bed = new THREE.Mesh(bedGeo, bedMat);
+      bed.position.set(-1.4, 0.45, -0.6);
+      houseGroup3D.add(bed);
+
+      // Roof (Sprue B1)
+      const roofGeo = new THREE.BoxGeometry(6.4, 0.18, 4.4);
+      const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+      roofMesh3D = new THREE.Mesh(roofGeo, roofMat);
+      roofMesh3D.position.set(0, 2.75, 0);
+      houseGroup3D.add(roofMesh3D);
+
+      // Steel Column Outlines
+      const colGeo = new THREE.BoxGeometry(0.18, 2.5, 0.18);
+      const colMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+      [
+        [-2.9, 1.45, 1.9],
+        [2.9, 1.45, 1.9],
+        [2.9, 1.45, -1.9],
+        [-2.9, 1.45, -1.9]
+      ].forEach(pos => {
+        const col = new THREE.Mesh(colGeo, colMat);
+        col.position.set(...pos);
+        houseGroup3D.add(col);
+      });
+
+      scene3D.add(houseGroup3D);
+    }
+
+    /* 2. Plastic Model Kit Runner / Sprue Frame Layout */
+    function buildSprueRunnerModel() {
+      sprueRunnerGroup3D = new THREE.Group();
+      sprueRunnerGroup3D.visible = false;
+
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.4 });
+      const pipeGeoX = new THREE.CylinderGeometry(0.08, 0.08, 7.6, 16);
+      const pipeGeoZ = new THREE.CylinderGeometry(0.08, 0.08, 5.2, 16);
+
+      const rail1 = new THREE.Mesh(pipeGeoX, frameMat);
+      rail1.rotation.z = Math.PI / 2;
+      rail1.position.set(0, 0.2, -2.5);
+      sprueRunnerGroup3D.add(rail1);
+
+      const rail2 = new THREE.Mesh(pipeGeoX, frameMat);
+      rail2.rotation.z = Math.PI / 2;
+      rail2.position.set(0, 0.2, 2.5);
+      sprueRunnerGroup3D.add(rail2);
+
+      const rail3 = new THREE.Mesh(pipeGeoZ, frameMat);
+      rail3.rotation.x = Math.PI / 2;
+      rail3.position.set(-3.7, 0.2, 0);
+      sprueRunnerGroup3D.add(rail3);
+
+      const rail4 = new THREE.Mesh(pipeGeoZ, frameMat);
+      rail4.rotation.x = Math.PI / 2;
+      rail4.position.set(3.7, 0.2, 0);
+      sprueRunnerGroup3D.add(rail4);
+
+      const partMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+
+      const pA1 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 1.8), partMat);
+      pA1.position.set(-1.8, 0.2, -1.0);
+      sprueRunnerGroup3D.add(pA1);
+
+      const pA2 = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 1.4), new THREE.MeshStandardMaterial({ color: 0x93c5fd }));
+      pA2.position.set(1.6, 0.2, -1.0);
+      sprueRunnerGroup3D.add(pA2);
+
+      const pB1 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.1, 1.8), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      pB1.position.set(-1.2, 0.2, 1.2);
+      sprueRunnerGroup3D.add(pB1);
+
+      const pC1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 1.8), frameMat);
+      pC1.position.set(2.0, 0.2, 1.2);
+      sprueRunnerGroup3D.add(pC1);
+
+      scene3D.add(sprueRunnerGroup3D);
+    }
+
+    function update3DWallMaterial() {
+      if (!wallMesh3D) return;
+      wallMesh3D.material.color.setHex(AppState.selectedPart.toneVal);
+      wallMesh3D.material.needsUpdate = true;
+    }
+
+    function onResizeThree() {
+      const container = document.getElementById('studio3DContainer');
+      if (!container || !renderer3D || !camera3D) return;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      const aspect = w / h;
+      const d = 5.6;
+      camera3D.left = -d * aspect;
+      camera3D.right = d * aspect;
+      camera3D.top = d;
+      camera3D.bottom = -d;
+      camera3D.updateProjectionMatrix();
+      renderer3D.setSize(w, h);
+    }
+
+    function animateThree() {
+      requestAnimationFrame(animateThree);
+      if (controls3D) controls3D.update();
+      if (renderer3D && scene3D && camera3D) {
+        renderer3D.render(scene3D, camera3D);
+      }
+    }
+  </script>
+
+  <script>
+    let canvas2D, ctx2D;
+    let isDraggingNode = false;
+    let selected2DIndex = -1;
+
+    const Plan2DData = {
+      nodes: [
+        { x: 50, y: 50, label: 'N1' },
+        { x: 420, y: 50, label: 'N2' },
+        { x: 420, y: 220, label: 'N3' },
+        { x: 300, y: 220, label: 'N4' },
+        { x: 300, y: 310, label: 'N5' },
+        { x: 50, y: 310, label: 'N6' }
+      ],
+      components: [
+        { id: 'A1', label: 'A1 ROOM WALL', x: 70, y: 70, w: 120, h: 120, color: '#f0f7ff', border: '#1d4ed8' },
+        { id: 'B1', label: 'B1 WINDOW 1.8m', x: 230, y: 50, w: 150, h: 16, color: '#0a192f', border: '#2563eb' },
+        { id: 'C1', label: 'C1 CIRCLE ZONE', x: 220, y: 190, r: 42, isCircle: true, color: '#eff6ff', border: '#3b82f6' }
+      ],
+      dimensions: [
+        { p1: { x: 50, y: 34 }, p2: { x: 420, y: 34 }, text: '5.20 m' },
+        { p1: { x: 435, y: 50 }, p2: { x: 435, y: 220 }, text: '3.00 m' },
+        { p1: { x: 300, y: 326 }, p2: { x: 420, y: 326 }, text: '2.00 m' },
+        { p1: { x: 34, y: 50 }, p2: { x: 34, y: 310 }, text: '3.50 m' }
+      ]
+    };
+
+    function init2DCanvas() {
+      canvas2D = document.getElementById('canvas2D');
+      if (!canvas2D) return;
+      ctx2D = canvas2D.getContext('2d');
+
+      const parent = canvas2D.parentElement;
+      const sizeW = Math.min(parent.clientWidth - 16, 520);
+      const sizeH = Math.min(parent.clientHeight - 16, 310);
+      canvas2D.width = sizeW;
+      canvas2D.height = sizeH;
+
+      attach2DEvents();
+      draw2DPlan();
+    }
+
+    function attach2DEvents() {
+      canvas2D.onmousedown = (e) => handle2DDown(e.clientX, e.clientY);
+      window.onmousemove = (e) => handle2DMove(e.clientX, e.clientY);
+      window.onmouseup = handle2DUp;
+
+      canvas2D.ontouchstart = (e) => {
+        if (e.touches.length === 1) {
+          handle2DDown(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      };
+      window.ontouchmove = (e) => {
+        if (isDraggingNode && e.touches.length === 1) {
+          handle2DMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      };
+      window.ontouchend = handle2DUp;
+    }
+
+    function handle2DDown(clientX, clientY) {
+      const rect = canvas2D.getBoundingClientRect();
+      const px = clientX - rect.left;
+      const py = clientY - rect.top;
+
+      selected2DIndex = -1;
+      Plan2DData.nodes.forEach((n, idx) => {
+        if (Math.hypot(n.x - px, n.y - py) < 18) {
+          isDraggingNode = true;
+          selected2DIndex = idx;
+        }
+      });
+      draw2DPlan();
+    }
+
+    function handle2DMove(clientX, clientY) {
+      if (!isDraggingNode || selected2DIndex === -1) return;
+      const rect = canvas2D.getBoundingClientRect();
+      const px = clientX - rect.left;
+      const py = clientY - rect.top;
+
+      Plan2DData.nodes[selected2DIndex].x = Math.max(25, Math.min(canvas2D.width - 25, px));
+      Plan2DData.nodes[selected2DIndex].y = Math.max(25, Math.min(canvas2D.height - 25, py));
+      draw2DPlan();
+    }
+
+    function handle2DUp() {
+      isDraggingNode = false;
+      selected2DIndex = -1;
+    }
+
+    function draw2DPlan() {
+      if (!ctx2D || !canvas2D) return;
+      const W = canvas2D.width;
+      const H = canvas2D.height;
+      ctx2D.clearRect(0, 0, W, H);
+
+      // 1. Grid
+      ctx2D.strokeStyle = '#e2e8f0';
+      ctx2D.lineWidth = 1;
+      for (let x = 0; x < W; x += 22) {
+        ctx2D.beginPath(); ctx2D.moveTo(x, 0); ctx2D.lineTo(x, H); ctx2D.stroke();
+      }
+      for (let y = 0; y < H; y += 22) {
+        ctx2D.beginPath(); ctx2D.moveTo(0, y); ctx2D.lineTo(W, y); ctx2D.stroke();
+      }
+
+      // 2. Components
+      Plan2DData.components.forEach(item => {
+        if (item.isCircle) {
+          ctx2D.beginPath();
+          ctx2D.arc(item.x, item.y, item.r, 0, Math.PI * 2);
+          ctx2D.fillStyle = item.color;
+          ctx2D.fill();
+          ctx2D.strokeStyle = item.border;
+          ctx2D.lineWidth = 2;
+          ctx2D.stroke();
+        } else {
+          ctx2D.beginPath();
+          ctx2D.roundRect(item.x, item.y, item.w, item.h, 6);
+          ctx2D.fillStyle = item.color;
+          ctx2D.fill();
+          ctx2D.strokeStyle = item.border;
+          ctx2D.lineWidth = 2;
+          ctx2D.stroke();
+        }
+        ctx2D.fillStyle = item.color === '#0a192f' ? '#ffffff' : '#0a192f';
+        ctx2D.font = 'bold 9px JetBrains Mono, monospace';
+        ctx2D.textAlign = 'center';
+        ctx2D.fillText(item.label, item.x + (item.w ? item.w / 2 : 0), item.y + (item.h ? item.h / 2 + 3 : 3));
+      });
+
+      // 3. Thick Wall Blueprint Lines
+      const nodes = Plan2DData.nodes;
+      ctx2D.beginPath();
+      ctx2D.moveTo(nodes[0].x, nodes[0].y);
+      for (let i = 1; i < nodes.length; i++) {
+        ctx2D.lineTo(nodes[i].x, nodes[i].y);
+      }
+      ctx2D.closePath();
+      ctx2D.strokeStyle = '#0a192f';
+      ctx2D.lineWidth = 3.5;
+      ctx2D.stroke();
+
+      // 4. Dimension lines with dashed guides
+      Plan2DData.dimensions.forEach(dim => {
+        ctx2D.strokeStyle = '#2563eb';
+        ctx2D.lineWidth = 1;
+        ctx2D.setLineDash([3, 3]);
+        ctx2D.beginPath();
+        ctx2D.moveTo(dim.p1.x, dim.p1.y);
+        ctx2D.lineTo(dim.p2.x, dim.p2.y);
+        ctx2D.stroke();
+        ctx2D.setLineDash([]);
+
+        const mx = (dim.p1.x + dim.p2.x) / 2;
+        const my = (dim.p1.y + dim.p2.y) / 2;
+        ctx2D.fillStyle = '#ffffff';
+        ctx2D.fillRect(mx - 22, my - 7, 44, 14);
+        ctx2D.strokeStyle = '#2563eb';
+        ctx2D.strokeRect(mx - 22, my - 7, 44, 14);
+        ctx2D.fillStyle = '#0a192f';
+        ctx2D.font = 'bold 8px JetBrains Mono, monospace';
+        ctx2D.textAlign = 'center';
+        ctx2D.fillText(dim.text, mx, my + 3);
+      });
+
+      // 5. Corner Nodes (Sprue Gates)
+      nodes.forEach((n, idx) => {
+        ctx2D.beginPath();
+        ctx2D.arc(n.x, n.y, 7, 0, Math.PI * 2);
+        ctx2D.fillStyle = (idx === selected2DIndex) ? '#2563eb' : '#ffffff';
+        ctx2D.fill();
+        ctx2D.strokeStyle = '#0a192f';
+        ctx2D.lineWidth = 2;
+        ctx2D.stroke();
+      });
+    }
+  </script>
+
+  <script>
+    let navigateTo;
+    let openQuotationSheet;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      
+      const phoneBezel = document.getElementById('phoneBezel');
+      const bottomNav = document.getElementById('persistentBottomNav');
+      const screens = {
+        welcome: document.getElementById('screenWelcome'),
+        style: document.getElementById('screenStyle'),
+        location: document.getElementById('screenLocation'),
+        chat: document.getElementById('screenChat'),
+        profile: document.getElementById('screenProfile'),
+        studio: document.getElementById('screenStudio')
+      };
+
+      navigateTo = function(screenKey) {
+        AppState.currentScreen = screenKey;
+        
+        // Strict iPhone 16 Pro Resolution Toggle (Portrait 402x874 vs Landscape 874x402)
+        if (screenKey === 'studio') {
+          phoneBezel.classList.remove('iphone-portrait');
+          phoneBezel.classList.add('iphone-landscape');
+          bottomNav.classList.add('hidden');
+          AppState.isLandscapeStudio = true;
+        } else {
+          phoneBezel.classList.remove('iphone-landscape');
+          phoneBezel.classList.add('iphone-portrait');
+          bottomNav.classList.remove('hidden');
+          AppState.isLandscapeStudio = false;
+        }
+
+        // Toggle screens
+        Object.keys(screens).forEach(k => {
+          if (k === screenKey) {
+            screens[k].classList.remove('hidden');
+            screens[k].classList.add('flex');
+          } else {
+            screens[k].classList.add('hidden');
+            screens[k].classList.remove('flex');
+          }
+        });
+
+        // Update Bottom Nav indicator
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          const target = btn.dataset.target;
+          const dot = btn.querySelector('.nav-dot');
+          if (target === screenKey) {
+            btn.classList.add('text-kit-cobalt');
+            btn.classList.remove('text-slate-400');
+            if (dot) dot.classList.replace('bg-transparent', 'bg-kit-cobalt');
+          } else {
+            btn.classList.remove('text-kit-cobalt');
+            btn.classList.add('text-slate-400');
+            if (dot) dot.classList.replace('bg-kit-cobalt', 'bg-transparent');
+          }
+        });
+
+        if (screenKey === 'studio') {
+          setTimeout(() => {
+            init2DCanvas();
+            initThreeJS();
+          }, 120);
+        }
+      };
+
+      // Bottom Nav Item Click Listeners
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.onclick = () => {
+          navigateTo(btn.dataset.target);
+        };
+      });
+
+      // [Screen 1: Welcome Actions]
+      document.getElementById('btnNewDesign').onclick = () => navigateTo('style');
+      document.getElementById('btnTemplate').onclick = () => navigateTo('style');
+
+      // [Screen 2: Style Actions]
+      document.querySelectorAll('.btn-back-home').forEach(btn => {
+        btn.onclick = () => navigateTo('welcome');
+      });
+
+      const rangeBudget = document.getElementById('rangeBudget');
+      const txtBudgetBadge = document.getElementById('txtBudgetBadge');
+      rangeBudget.oninput = (e) => {
+        AppState.budget = parseInt(e.target.value);
+        txtBudgetBadge.innerText = AppState.budget.toLocaleString() + ' ฿';
+        document.getElementById('txtMaxBudget').innerText = AppState.budget.toLocaleString() + ' ฿';
+        updateBudgetBar();
+      };
+
+      document.querySelectorAll('.budget-chip').forEach(chip => {
+        chip.onclick = () => {
+          const val = parseInt(chip.dataset.val);
+          rangeBudget.value = val;
+          AppState.budget = val;
+          txtBudgetBadge.innerText = val.toLocaleString() + ' ฿';
+          document.getElementById('txtMaxBudget').innerText = val.toLocaleString() + ' ฿';
+          updateBudgetBar();
+        };
+      });
+
+      document.querySelectorAll('.style-tag').forEach(tag => {
+        tag.onclick = () => {
+          tag.classList.toggle('bg-kit-vivid');
+          tag.classList.toggle('text-white');
+          tag.classList.toggle('bg-white');
+          tag.classList.toggle('text-slate-700');
+        };
+      });
+
+      document.querySelectorAll('.house-ref-card').forEach(card => {
+        card.onclick = () => {
+          AppState.activeStyle = card.dataset.style;
+          AppState.accumulatedCost = parseInt(card.dataset.price);
+          AppState.builder = card.dataset.builder;
+          navigateTo('location');
+        };
+      });
+
+      // [Screen 3: Location Actions]
+      document.querySelectorAll('.btn-back-style').forEach(btn => {
+        btn.onclick = () => navigateTo('style');
+      });
+
+      const btnChoiceYes = document.getElementById('btnChoiceYes');
+      const btnChoiceNo = document.getElementById('btnChoiceNo');
+      const formDim = document.getElementById('formDimensions');
+
+      btnChoiceYes.onclick = () => {
+        AppState.hasAreaDimensions = true;
+        btnChoiceYes.className = 'w-full p-3.5 rounded-2xl bg-kit-navy text-white text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-kit-cobalt shadow-sm';
+        btnChoiceYes.querySelector('i').className = 'ph ph-check-circle-fill text-lg text-kit-vivid';
+        btnChoiceNo.className = 'w-full p-3.5 rounded-2xl bg-white text-slate-700 text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-slate-300';
+        btnChoiceNo.querySelector('i').className = 'ph ph-circle text-lg text-slate-400';
+        formDim.classList.remove('opacity-50', 'pointer-events-none');
+      };
+
+      btnChoiceNo.onclick = () => {
+        AppState.hasAreaDimensions = false;
+        btnChoiceNo.className = 'w-full p-3.5 rounded-2xl bg-kit-navy text-white text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-kit-cobalt shadow-sm';
+        btnChoiceNo.querySelector('i').className = 'ph ph-check-circle-fill text-lg text-kit-vivid';
+        btnChoiceYes.className = 'w-full p-3.5 rounded-2xl bg-white text-slate-700 text-xs font-mono font-bold flex items-center justify-between transition active:scale-[0.99] border-2 border-slate-300';
+        btnChoiceYes.querySelector('i').className = 'ph ph-circle text-lg text-slate-400';
+        formDim.classList.add('opacity-50', 'pointer-events-none');
+      };
+
+      const boxUpload = document.getElementById('boxUploadPhoto');
+      const fileInput = document.getElementById('fileSiteInput');
+      boxUpload.onclick = () => fileInput.click();
+      fileInput.onchange = (e) => {
+        if (e.target.files.length > 0) {
+          document.getElementById('txtUploadedFileName').innerText = `Uploaded: ${e.target.files[0].name}`;
+        }
+      };
+
+      document.getElementById('btnProceedToStudio').onclick = () => {
+        navigateTo('studio');
+      };
+
+      // [Screen 6: Studio Actions (Landscape 874x402)]
+      document.getElementById('btnExitStudio').onclick = () => navigateTo('location');
+
+      const btnTab2D = document.getElementById('btnTab2D');
+      const btnTab3D = document.getElementById('btnTab3D');
+      const s2DCont = document.getElementById('studio2DContainer');
+      const s3DCont = document.getElementById('studio3DContainer');
+
+      btnTab2D.onclick = () => {
+        AppState.studioTab = '2D';
+        btnTab2D.className = 'px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-kit-vivid text-white transition shadow-sm';
+        btnTab3D.className = 'px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-300 hover:text-white transition';
+        s3DCont.classList.add('hidden');
+        s2DCont.classList.remove('hidden');
+        setTimeout(init2DCanvas, 50);
+      };
+
+      btnTab3D.onclick = () => {
+        AppState.studioTab = '3D';
+        btnTab3D.className = 'px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-kit-vivid text-white transition shadow-sm';
+        btnTab2D.className = 'px-3.5 py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-300 hover:text-white transition';
+        s2DCont.classList.add('hidden');
+        s3DCont.classList.remove('hidden');
+        setTimeout(onResizeThree, 50);
+      };
+
+      // Sprue Tray vs Assembled toggle
+      const btnToggleSprue = document.getElementById('btnToggleSprueMode');
+      btnToggleSprue.onclick = () => {
+        if (AppState.sprueMode === 'assembled') {
+          AppState.sprueMode = 'sprue';
+          document.getElementById('txtSprueModeLabel').innerText = 'Assembled View';
+          document.getElementById('txtModelViewModeStatus').innerHTML = 'MODE: <strong class="text-kit-cobalt">SPRUE TRAY</strong>';
+          if (houseGroup3D) houseGroup3D.visible = false;
+          if (sprueRunnerGroup3D) sprueRunnerGroup3D.visible = true;
+        } else {
+          AppState.sprueMode = 'assembled';
+          document.getElementById('txtSprueModeLabel').innerText = 'Sprue Tray';
+          document.getElementById('txtModelViewModeStatus').innerHTML = 'MODE: <strong class="text-kit-cobalt">ASSEMBLED</strong>';
+          if (houseGroup3D) houseGroup3D.visible = true;
+          if (sprueRunnerGroup3D) sprueRunnerGroup3D.visible = false;
+        }
+      };
+
+      // 3D Camera preset
+      document.getElementById('btnToggle3DViewMode').onclick = () => {
+        if (cameraViewPreset === 'exterior') {
+          cameraViewPreset = 'interior';
+          camera3D.position.set(0.1, 2.5, 4.0);
+          controls3D.target.set(0, 1.2, 0);
+          document.getElementById('txtCamModeLabel').innerText = 'Interior Close-up';
+        } else {
+          cameraViewPreset = 'exterior';
+          camera3D.position.set(10, 8.5, 10);
+          controls3D.target.set(0, 1.0, 0);
+          document.getElementById('txtCamModeLabel').innerText = 'Exterior Isometric';
+        }
+      };
+
+      const tabMatToggle = document.getElementById('tabMatToggle');
+      const tabBuiltinToggle = document.getElementById('tabBuiltinToggle');
+      const panelMat = document.getElementById('panelMaterialsMode');
+      const panelBuiltin = document.getElementById('panelBuiltinMode');
+
+      tabMatToggle.onclick = () => {
+        tabMatToggle.className = 'py-1 rounded-lg text-xs font-mono font-bold bg-kit-navy text-white transition';
+        tabBuiltinToggle.className = 'py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-600 hover:text-kit-navy transition';
+        panelMat.classList.remove('hidden');
+        panelBuiltin.classList.add('hidden');
+      };
+
+      tabBuiltinToggle.onclick = () => {
+        tabBuiltinToggle.className = 'py-1 rounded-lg text-xs font-mono font-bold bg-kit-navy text-white transition';
+        tabMatToggle.className = 'py-1 rounded-lg text-xs font-mono font-bold bg-transparent text-slate-600 hover:text-kit-navy transition';
+        panelBuiltin.classList.remove('hidden');
+        panelMat.classList.add('hidden');
+      };
+
+      // Built-in Category Filter Buttons
+      document.querySelectorAll('.builtin-cat-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.builtin-cat-btn').forEach(b => {
+            b.className = 'builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-white text-slate-700 border border-slate-300 shrink-0';
+          });
+          btn.className = 'builtin-cat-btn px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold bg-kit-cobalt text-white shrink-0';
+          
+          const cat = btn.dataset.cat;
+          document.querySelectorAll('.builtin-part-card').forEach(card => {
+            if (cat === 'all' || card.dataset.cat === cat) {
+              card.style.display = 'block';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        };
+      });
+
+      // Built-in Part Click Interaction
+      document.querySelectorAll('.builtin-part-card').forEach(card => {
+        card.onclick = () => {
+          const title = card.dataset.title;
+          const price = parseInt(card.dataset.price);
+          const partId = card.dataset.id;
+
+          document.getElementById('txtStudioPartTitle').innerText = `${title} [${partId}]`;
+          AppState.accumulatedCost += price;
+          updateBudgetBar();
+
+          // Add component to 2D Plan
+          Plan2DData.components.push({
+            id: partId,
+            label: `${partId} ${title.toUpperCase()}`,
+            x: 90 + Math.random() * 110,
+            y: 90 + Math.random() * 70,
+            w: 80,
+            h: 28,
+            color: '#f0f7ff',
+            border: '#1d4ed8'
+          });
+          draw2DPlan();
+        };
+      });
+
+      // Texture Chips handling with AI advice sync
+      document.querySelectorAll('.tex-chip').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tex-chip').forEach(b => {
+            b.className = 'tex-chip px-1 py-1 rounded-xl text-[9px] font-mono font-bold bg-white text-slate-700 border-2 border-slate-300 hover:border-kit-cobalt transition text-center';
+          });
+          btn.className = 'tex-chip px-1 py-1 rounded-xl text-[9px] font-mono font-bold bg-kit-navy text-white border-2 border-kit-navy transition text-center';
+          
+          const tex = btn.dataset.tex;
+          AppState.selectedPart.texture = tex;
+          
+          const cat = AI_ADVICE_CATALOG[tex];
+          if (cat) {
+            document.getElementById('txtMatBullet').innerText = cat.bullet;
+            document.getElementById('txtAiAdviceContent').innerText = cat.advice;
+          }
+        };
+      });
+
+      // Tone Swatches
+      document.querySelectorAll('.tone-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tone-btn').forEach(b => {
+            b.classList.remove('ring-2', 'ring-kit-vivid');
+            b.classList.add('ring-1', 'ring-slate-300');
+          });
+          btn.classList.add('ring-2', 'ring-kit-vivid');
+          btn.classList.remove('ring-1', 'ring-slate-300');
+
+          AppState.selectedPart.toneHex = btn.dataset.hex;
+          AppState.selectedPart.toneVal = parseInt(btn.dataset.val);
+          document.getElementById('txtToneHex').innerText = btn.dataset.hex;
+          update3DWallMaterial();
+        };
+      });
+
+      function updateBudgetBar() {
+        const pct = Math.min(100, (AppState.accumulatedCost / AppState.budget) * 100);
+        document.getElementById('studioBudgetProgress').style.width = pct + '%';
+        document.getElementById('txtCurrentCost').innerText = AppState.accumulatedCost.toLocaleString();
+      }
+
+      // Order Modal Handlers
+      const modalOrder = document.getElementById('modalOrderSummary');
+      document.getElementById('btnPlaceOrder').onclick = () => {
+        document.getElementById('summaryModelName').innerText = AppState.activeStyle;
+        document.getElementById('summaryTexture').innerText = AppState.selectedPart.texture;
+        document.getElementById('summaryTotalQuotation').innerText = AppState.accumulatedCost.toLocaleString() + ' ฿';
+        modalOrder.classList.remove('hidden');
+      };
+
+      document.getElementById('btnCloseOrderModal').onclick = () => {
+        modalOrder.classList.add('hidden');
+      };
+
+      document.getElementById('btnConfirmSendFactory').onclick = () => {
+        modalOrder.classList.add('hidden');
+        showToast('CAD Runner Ticket #KD-2026-99 sent to production factory!');
+      };
+
+      // Quotation Sheet Modal
+      const modalQuotation = document.getElementById('modalQuotationSheet');
+      openQuotationSheet = function(factoryName, price) {
+        document.getElementById('txtQuotationFactoryName').innerText = factoryName;
+        document.getElementById('txtQuotationTotalAmount').innerText = `${price} ฿`;
+        modalQuotation.classList.remove('hidden');
+      };
+
+      document.getElementById('btnCloseQuotationModal').onclick = () => {
+        modalQuotation.classList.add('hidden');
+      };
+
+      document.getElementById('btnSignContract').onclick = () => {
+        modalQuotation.classList.add('hidden');
+        showToast('Contract Signed & Production Slot Reserved with Contractor!');
+      };
+
+      function showToast(msg) {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-kit-navy text-white px-4 py-2.5 rounded-2xl border-2 border-kit-cobalt text-xs font-mono z-50 shadow-2xl flex items-center gap-2';
+        alertBox.innerHTML = `<i class="ph ph-check-circle text-emerald-400 text-lg"></i> ${msg}`;
+        document.body.appendChild(alertBox);
+        setTimeout(() => alertBox.remove(), 4000);
+      }
+    });
+  </script>
+</body>
+</html>
